@@ -19,7 +19,7 @@ public class PlayerAnimation : MonoBehaviour
         {
             spriteRenderer.flipX = playerBehaviour.currentSpeed.x < 0;
         }
-        animator.SetFloat("Speed", playerBehaviour.isGrounded ? Input.GetAxisRaw("Horizontal") * playerBehaviour.speedWalk : 0);
-        animator.SetFloat("Jumping", !playerBehaviour.isGrounded ? (playerBehaviour.isFalling ? -1 : playerBehaviour.isJumping ? 1 : 0) : 0);
+        animator.SetFloat("Speed", playerBehaviour.bottomCollider ? Input.GetAxisRaw("Horizontal") * playerBehaviour.speedWalk : 0);
+        animator.SetFloat("Jumping", playerBehaviour.isFalling ? -1 : playerBehaviour.isJumping ? 1 : 0);
     }
 }

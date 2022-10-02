@@ -14,21 +14,21 @@ public class PlayerBehaviour : MonoBehaviour
 
     [HideInInspector] public float move, lastMove;
 
-    [HideInInspector] public bool isGrounded, isJumping, isFalling, isRunning;
-
+    public bool isGrounded, isJumping, isFalling, isRunning;
+    [HideInInspector] public int lastJumpSide;
     [HideInInspector] public bool topCollider, topRightCollider, rightCollider, rightBottomCollider, bottomCollider, bottomLeftCollider, leftCollider, leftTopCollider;
 
-    void FixedUpdate()
+    void Update()
     {
         Walk();
-        if (Input.GetButton("Jump") && isGrounded)
+        if (Input.GetButtonDown("Jump") && isGrounded && ((lastJumpSide == -1 && rightBottomCollider) || (lastJumpSide == 1 && bottomLeftCollider) || lastJumpSide == 0))
         {
             Jump();
         }
         SetStatus();
         currentSpeed = rb.velocity;
 
-        if (Input.GetKey(KeyCode.R))
+        if (Input.GetKeyDown(KeyCode.R))
         {
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
@@ -37,24 +37,25 @@ public class PlayerBehaviour : MonoBehaviour
     void Walk()
     {
         move = Input.GetAxisRaw("Horizontal");
-        rb.velocity = new Vector2(speedWalk * move, rb.velocity.y);
+        rb.velocity = new Vector2(speedWalk * move * (isJumping ? 1.2f : 1), rb.velocity.y);
     }
 
     void Jump()
     {
+
         rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+        lastJumpSide = bottomCollider ? 0 : bottomLeftCollider ? -1 : 1;
     }
 
     void SetStatus()
     {
         isRunning = Input.GetAxisRaw("Horizontal") != 0;
-        isGrounded = Physics2D.OverlapCircle(new Vector2(walkCollider.bounds.center.x, walkCollider.bounds.min.y), .2f, groundLayer);
-        isFalling = rb.velocity.y < 0;
-        isJumping = rb.velocity.y > 0;
+        isGrounded = bottomCollider || bottomLeftCollider || rightBottomCollider;
+        isFalling = rb.velocity.y < 0 && !bottomCollider;
+        isJumping = rb.velocity.y > 0 && !bottomCollider;
 
-        // leftCollider = Physics2D.OverlapCircle(new Vector2(walkCollider.bounds.min.x, walkCollider.bounds.center.y), .2f, groundLayer);
-        // rightCollider = Physics2D.OverlapCircle(new Vector2(walkCollider.bounds.max.x, walkCollider.bounds.center.y), .2f, groundLayer);
-        // bottomLeftCollider = Physics2D.OverlapCircle(new Vector2(walkCollider.bounds.min.x, walkCollider.bounds.min.y), .2f, groundLayer);
-        // rightBottomCollider = Physics2D.OverlapCircle(new Vector2(walkCollider.bounds.max.x, walkCollider.bounds.min.y), .2f, groundLayer);
+        bottomLeftCollider = Physics2D.OverlapCircle(new Vector2(walkCollider.bounds.min.x, walkCollider.bounds.min.y), .4f, groundLayer);
+        rightBottomCollider = Physics2D.OverlapCircle(new Vector2(walkCollider.bounds.max.x, walkCollider.bounds.min.y), .4f, groundLayer);
+        bottomCollider = Physics2D.OverlapCircle(new Vector2(walkCollider.bounds.center.x, walkCollider.bounds.min.y), .4f, groundLayer);
     }
 }
